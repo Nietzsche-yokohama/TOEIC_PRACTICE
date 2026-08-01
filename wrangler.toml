@@ -5,5 +5,5 @@ workers_dev = true
 
 [[kv_namespaces]]
 binding = "STATE_KV"
-id = "<KV_NAMESPACE_ID>"
-preview_id = "<KV_PREVIEW_ID>"
+id = "a673f0aa8ead4e418fe952cf11dbc940"
+preview_id = "209807235a9740e491266bbc1c79fb72"
