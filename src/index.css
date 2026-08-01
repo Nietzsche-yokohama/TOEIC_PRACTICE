@@ -189,6 +189,14 @@ button {
   border: 1px solid var(--border);
 }
 .illustration svg { display: block; width: 100%; height: auto; }
+.illustration img { display: block; width: 100%; height: auto; aspect-ratio: 3 / 2; object-fit: cover; }
+.photo-credit {
+  font-size: 10px;
+  color: var(--text-dim);
+  padding: 4px 8px;
+  background: var(--card-2);
+  text-align: right;
+}
 
 /* --- Passage / transcript --- */
 .passage {

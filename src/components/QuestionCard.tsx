@@ -45,9 +45,10 @@ export default function QuestionCard({ group, item, isFirstInGroup, tts, onAnswe
 
   return (
     <div className="card">
-      {group.svg && (
+      {group.photo && (
         <div className="illustration" style={{ marginBottom: 16 }}>
-          <div dangerouslySetInnerHTML={{ __html: group.svg }} />
+          <img src={group.photo.src} alt="" loading="eager" />
+          {group.photo.credit && <div className="photo-credit">{group.photo.credit}</div>}
         </div>
       )}
 

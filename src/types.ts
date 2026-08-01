@@ -27,8 +27,8 @@ export interface QuestionItem {
 export interface QuestionGroup {
   id: string;
   part: Part;
-  /** Part1: 写真代わりのイラスト(inline SVG) */
-  svg?: string;
+  /** Part1: 写真(フリー素材)。creditは表示用クレジット表記（CC0/PDMの場合は省略可） */
+  photo?: { src: string; credit?: string };
   /** Part2: 質問文を読み上げる */
   spokenPrompt?: boolean;
   /** Part1/2: 選択肢自体を読み上げる（文字は正解後まで隠す） */
