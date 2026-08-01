@@ -80,6 +80,7 @@ export default function App() {
         <h1 className="app-title">
           TOEIC <span>Drill</span>
         </h1>
+        <span className="app-version">v{__APP_VERSION__}</span>
       </div>
 
       {view.name === 'home' && (

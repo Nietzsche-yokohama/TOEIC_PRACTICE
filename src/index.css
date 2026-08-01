@@ -54,6 +54,13 @@ button {
 }
 .app-title span { color: var(--blue); }
 
+.app-version {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+
 .card {
   background: var(--card);
   border: 1px solid var(--border);
