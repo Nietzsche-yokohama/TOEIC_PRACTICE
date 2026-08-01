@@ -1,0 +1,27 @@
+name: Deploy to Cloudflare
+on:
+  push: { branches: [master, main] }
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '22', cache: 'npm' }
+      - run: npm ci
+      - run: npm run build
+        env:
+          VITE_API_BASE: ${{ secrets.VITE_API_BASE }}
+          VITE_APP_TOKEN: ${{ secrets.VITE_APP_TOKEN }}
+      - name: Deploy Pages
+        # コミットメッセージは固定ASCIIで上書き（日本語/絵文字だと Cloudflare が
+        # マルチバイト途中で切り詰めて Invalid commit message になるため）
+        run: npx wrangler pages deploy dist --project-name=toeic-drill --branch=master --commit-message="Deploy from CI"
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      - name: Deploy Worker
+        run: npx wrangler deploy worker/index.ts
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}

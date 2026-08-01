@@ -1,0 +1,32 @@
+{
+  "name": "toeic-drill",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "gen-icons": "node scripts/generate-icons.mjs",
+    "worker:dev": "wrangler dev worker/index.ts --local",
+    "worker:deploy": "wrangler deploy worker/index.ts",
+    "pages:deploy": "wrangler pages deploy dist --project-name toeic-drill"
+  },
+  "dependencies": {
+    "idb-keyval": "^6.2.1",
+    "lucide-react": "^0.441.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20260730.1",
+    "@types/react": "^18.3.5",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.3.1",
+    "sharp": "^0.33.5",
+    "typescript": "^5.5.3",
+    "vite": "^5.4.1",
+    "vite-plugin-pwa": "^0.20.5",
+    "wrangler": "^4.95.0"
+  }
+}

@@ -1,0 +1,9 @@
+name = "toeic-drill-worker"
+main = "worker/index.ts"
+compatibility_date = "2024-09-10"
+workers_dev = true
+
+[[kv_namespaces]]
+binding = "STATE_KV"
+id = "<KV_NAMESPACE_ID>"
+preview_id = "<KV_PREVIEW_ID>"
