@@ -129,10 +129,11 @@ export const part6Groups: QuestionGroup[] = [
       {
         id: 'p6-3-b4',
         prompt: '空欄 (4) に入る最も適切な語句を選びなさい。',
-        options: ['Additionally', 'However', 'Therefore', 'For instance'],
+        options: ['Additionally', 'However', 'For instance', 'In contrast'],
         correctIndex: 0,
         translation: '来客用スペースの説明に続き、社員への追加の注意事項を述べているため Additionally が適切。',
-        explanation: '前文とは逆接でも例示でもなく、情報を追加している文脈。',
+        explanation:
+          '前文とは逆接(However / In contrast)でも例示(For instance)でもなく、来客用スペースの説明に社員への注意を付け加えている文脈。',
       },
     ],
   },

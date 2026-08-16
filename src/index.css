@@ -301,6 +301,38 @@ button {
 }
 .audio-btn .icon { font-size: 18px; }
 
+/* 再生中の一時停止／停止 */
+.audio-controls {
+  display: flex;
+  gap: 10px;
+}
+.audio-controls .audio-btn { margin-bottom: 16px; }
+
+/* 1つの会話・トーク・文書に複数の設問がぶら下がることを示すヘッダー */
+.set-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+}
+.set-badge {
+  font-size: 12px;
+  font-weight: 800;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: rgba(79, 157, 255, 0.12);
+  color: var(--text);
+}
+.set-count {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-dim);
+}
+
 /* --- Feedback panel --- */
 .feedback {
   margin-top: 16px;
