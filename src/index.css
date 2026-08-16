@@ -245,6 +245,13 @@ button {
 }
 .prompt.blank { font-family: 'JetBrains Mono', monospace; font-size: 15px; }
 
+/* 経過時間は選択肢のすぐ上に置く（長文でスクロールしても解答時に見える） */
+.question-timer {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 8px;
+}
+
 .options {
   display: flex;
   flex-direction: column;
