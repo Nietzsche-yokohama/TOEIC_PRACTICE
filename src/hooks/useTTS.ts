@@ -18,6 +18,37 @@ function loadVoices(): Promise<SpeechSynthesisVoice[]> {
   });
 }
 
+// ── 話者の性別を声に反映する ─────────────────────────────────────────────
+// Part3/4 の設問は "What does the man ask...?" のように性別で話者を指すため、
+// 男性役・女性役にランダムな声を割り当てると設問が解けなくなる。
+// SpeechSynthesisVoice に性別の情報は無いので、よく使われる音声名から判定する。
+// 「Google UK English Female」は "male" も含むので、必ず女性判定を先に行う。
+const FEMALE_VOICE_HINTS = [
+  'female', 'samantha', 'karen', 'moira', 'tessa', 'fiona', 'victoria', 'susan', 'allison', 'ava',
+  'serena', 'kate', 'catherine', 'zira', 'aria', 'jenny', 'michelle', 'sonia', 'libby', 'nicky',
+  'joanna', 'salli', 'kendra', 'emma', 'amy', 'nova', 'shelley',
+];
+const MALE_VOICE_HINTS = [
+  'male', 'alex', 'daniel', 'fred', 'thomas', 'oliver', 'arthur', 'gordon', 'aaron', 'rishi',
+  'david', 'mark', 'guy', 'ryan', 'brian', 'matthew', 'justin', 'joey', 'eric', 'roger', 'steffan',
+  'george', 'james', 'reed', 'albert',
+];
+
+type Gender = 'male' | 'female';
+
+function voiceGender(v: SpeechSynthesisVoice): Gender | undefined {
+  const name = v.name.toLowerCase();
+  if (FEMALE_VOICE_HINTS.some((h) => name.includes(h))) return 'female';
+  if (MALE_VOICE_HINTS.some((h) => name.includes(h))) return 'male';
+  return undefined;
+}
+
+interface VoiceChoice {
+  voice?: SpeechSynthesisVoice;
+  /** 性別の分かる声が端末に無いときは、声色で男女を区別する */
+  pitch: number;
+}
+
 /** 米(en-US)・英(en-GB)ボイスをランダムに選ぶ。無ければ他のen-*音声にフォールバック。 */
 function pickVoicePool(voices: SpeechSynthesisVoice[]): SpeechSynthesisVoice[] {
   const en = voices.filter((v) => v.lang.toLowerCase().startsWith('en'));
@@ -25,6 +56,58 @@ function pickVoicePool(voices: SpeechSynthesisVoice[]): SpeechSynthesisVoice[] {
   const primaryLang = Math.random() < 0.5 ? 'en-us' : 'en-gb';
   const primary = en.filter((v) => v.lang.toLowerCase() === primaryLang);
   return primary.length > 0 ? primary : en;
+}
+
+const clampPitch = (p: number) => Math.min(1.8, Math.max(0.5, p));
+
+/** 話者ごとに声を決める。gender 指定がある話者には、その性別の声を優先して割り当てる。 */
+function assignVoices(lines: AudioLine[], voices: SpeechSynthesisVoice[]): Record<string, VoiceChoice> {
+  const en = voices.filter((v) => v.lang.toLowerCase().startsWith('en'));
+  const all = en.length > 0 ? en : voices;
+  const pool = pickVoicePool(voices);
+
+  const speakers = Array.from(new Set(lines.map((l) => l.speaker)));
+  const wanted: Record<string, Gender | undefined> = {};
+  for (const line of lines) {
+    if (line.gender && !wanted[line.speaker]) wanted[line.speaker] = line.gender;
+  }
+
+  const used = new Set<SpeechSynthesisVoice>();
+  const chosen: Record<string, VoiceChoice> = {};
+
+  speakers.forEach((sp, i) => {
+    const want = wanted[sp];
+    let voice: SpeechSynthesisVoice | undefined;
+    let pitch = 1;
+
+    if (want) {
+      // 同じ言語の声を優先し、無ければ他のen-*からでも性別の合う声を探す
+      voice =
+        pool.find((v) => !used.has(v) && voiceGender(v) === want) ??
+        all.find((v) => !used.has(v) && voiceGender(v) === want);
+    }
+    if (!voice) {
+      voice = pool.find((v) => !used.has(v)) ?? pool[i % pool.length];
+      // 性別が判定できる声が無かった場合でも、男女は聞き分けられるようにする
+      if (want) pitch = want === 'female' ? 1.35 : 0.75;
+    }
+    if (voice) used.add(voice);
+    chosen[sp] = { voice, pitch };
+  });
+
+  // 声もピッチも同じ話者が並ぶと会話として聞き分けられないので、ずらす
+  const seen = new Set<string>();
+  speakers.forEach((sp, i) => {
+    const c = chosen[sp];
+    let key = `${c.voice?.voiceURI ?? '-'}|${c.pitch}`;
+    if (seen.has(key)) {
+      c.pitch = clampPitch(c.pitch + (i % 2 === 0 ? 0.3 : -0.3));
+      key = `${c.voice?.voiceURI ?? '-'}|${c.pitch}`;
+    }
+    seen.add(key);
+  });
+
+  return chosen;
 }
 
 // ── 出だしの音欠け対策: cancel() の直後に喋らせない ──────────────────────
@@ -150,12 +233,7 @@ export function useTTS(): UseTTS {
         if (!alive()) return;
       }
 
-      const pool = pickVoicePool(voicesRef.current);
-      const speakers = Array.from(new Set(lines.map((l) => l.speaker)));
-      const speakerVoice: Record<string, SpeechSynthesisVoice | undefined> = {};
-      speakers.forEach((sp, i) => {
-        speakerVoice[sp] = pool[i % pool.length];
-      });
+      const speakerVoice = assignVoices(lines, voicesRef.current);
 
       for (const line of lines) {
         // 一時停止中は次の発話に進まない（発話中の一時停止は speechSynthesis.pause() が担う）
@@ -163,13 +241,14 @@ export function useTTS(): UseTTS {
         if (!alive()) break;
         await new Promise<void>((resolve) => {
           const utter = new SpeechSynthesisUtterance(line.text);
-          const voice = speakerVoice[line.speaker];
-          if (voice) {
-            utter.voice = voice;
-            utter.lang = voice.lang;
+          const choice = speakerVoice[line.speaker];
+          if (choice?.voice) {
+            utter.voice = choice.voice;
+            utter.lang = choice.voice.lang;
           } else {
             utter.lang = 'en-US';
           }
+          utter.pitch = choice?.pitch ?? 1;
           utter.rate = rate;
           utter.onend = () => resolve();
           utter.onerror = () => resolve();

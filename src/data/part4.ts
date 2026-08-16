@@ -94,6 +94,7 @@ export const part4Groups: QuestionGroup[] = [
     audioScript: [
       {
         speaker: 'A',
+        gender: 'female',
         text: "Hi, this is Rachel from Bright Path Consulting returning your call about the workshop schedule. I checked with our trainers, and we can move the session from Tuesday to Thursday afternoon if that works better for your team. Could you give me a call back by the end of the day to confirm? Also, I'll need the final number of participants so we can prepare enough materials. You can reach me at extension two-two-one. Thanks, and I look forward to hearing from you.",
       },
     ],
