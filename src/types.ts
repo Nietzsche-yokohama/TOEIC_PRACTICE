@@ -6,6 +6,11 @@ export const READING_PARTS: Part[] = [5, 6, 7];
 export interface AudioLine {
   speaker: 'A' | 'B' | 'C';
   text: string;
+  /**
+   * 話者の性別。設問が "What does the man ask...?" のように性別で話者を指す場合は必須。
+   * 指定すると、その話者には男性/女性の声が固定で割り当てられる。
+   */
+  gender?: 'male' | 'female';
 }
 
 export interface PassageText {

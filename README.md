@@ -74,3 +74,14 @@ npm run worker:dev    # Worker (別ターミナル, http://localhost:8787)
 **3. Part 3・4・6・7 は「1つの会話・トーク・文書 + 設問3〜4問」を1 `QuestionGroup` にまとめる。**
 
 同じ `QuestionGroup` の設問は連続して出題され、画面上部に「トーク 1 / 3 ・ 設問 2 / 3」と表示される。設問を別グループに分けると、どの音声・文書に対する設問か分からなくなる。
+
+**4. 設問が話者を性別で指す場合は、`audioScript` の各行に `gender` を必ず付ける。**
+
+"What does **the man** suggest?" のような設問は、音声の男女が入れ替わると解けなくなる。`gender: 'male' | 'female'` を指定すると、その話者には男性/女性の声が固定で割り当てられる（端末に性別の分かる声が無い場合は声色で区別する）。指定を忘れると声がランダムに決まり、同性の声が2つ選ばれた時点で正解不能になる。
+
+```ts
+audioScript: [
+  { speaker: 'A', gender: 'female', text: 'Hi Tom, did the shipment arrive today?' },
+  { speaker: 'B', gender: 'male', text: "No, actually. There's a delay." },
+],
+```
