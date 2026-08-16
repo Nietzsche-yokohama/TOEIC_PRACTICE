@@ -13,10 +13,11 @@ const defs: P5Def[] = [
   {
     id: 'p5-1',
     sentence: 'The marketing team ___ a new campaign next month.',
-    options: ['launch', 'launches', 'will launch', 'launching'],
+    options: ['launch', 'launched', 'will launch', 'launching'],
     correctIndex: 2,
     translation: 'マーケティングチームは来月、新しいキャンペーンを開始する予定です。',
-    explanation: '"next month"という未来を示す語句があるため、未来形 will launch が適切。',
+    explanation:
+      '"next month"という未来を示す語句があるため、未来形 will launch が適切。launch は主語 The marketing team（単数扱い）と一致せず、launched は過去形で "next month" と矛盾、launching は助動詞がなく述語動詞になれない。',
   },
   {
     id: 'p5-2',
@@ -52,11 +53,12 @@ const defs: P5Def[] = [
   },
   {
     id: 'p5-6',
-    sentence: "The company's profits have increased significantly ___ the last quarter.",
+    sentence: "The company's profits have increased steadily ___ the past three years.",
     options: ['since', 'for', 'at', 'on'],
-    correctIndex: 0,
-    translation: 'その会社の利益は前四半期以降、大幅に増加しました。',
-    explanation: '現在完了形と共に起点を表す since が適切。',
+    correctIndex: 1,
+    translation: 'その会社の利益は過去3年間、着実に増加しています。',
+    explanation:
+      '現在完了形とともに「期間の長さ」を表すには for。since は "since 2020" のように起点（時の一点）を示す語で、"the past three years" のような期間の長さには使えない。',
   },
   {
     id: 'p5-7',

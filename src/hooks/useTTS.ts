@@ -59,15 +59,20 @@ function delay(ms: number): Promise<void> {
 export interface UseTTS {
   supported: boolean;
   speaking: boolean;
+  paused: boolean;
   play: (lines: AudioLine[], rate?: number) => Promise<void>;
+  pause: () => void;
+  resume: () => void;
   stop: () => void;
 }
 
 export function useTTS(): UseTTS {
   const [supported] = useState(() => typeof window !== 'undefined' && 'speechSynthesis' in window);
   const [speaking, setSpeaking] = useState(false);
+  const [paused, setPaused] = useState(false);
   const voicesRef = useRef<SpeechSynthesisVoice[]>([]);
   const cancelledRef = useRef(false);
+  const pausedRef = useRef(false);
   // 連続で再生を押されたとき、古い再生ループが speaking を落とさないようにする印
   const playTokenRef = useRef(0);
 
@@ -89,8 +94,31 @@ export function useTTS(): UseTTS {
   const stop = useCallback(() => {
     cancelledRef.current = true;
     playTokenRef.current += 1;
-    if (supported) cancelSpeech();
+    if (supported) {
+      cancelSpeech();
+      // 一時停止したまま cancel すると、次の発話がpause状態のまま鳴らない環境がある。
+      // キューを空にしてから resume() して pause 状態を解除しておく。
+      if (pausedRef.current) speechSynthesis.resume();
+    }
+    pausedRef.current = false;
+    setPaused(false);
     setSpeaking(false);
+  }, [supported]);
+
+  const pause = useCallback(() => {
+    // iOS Safari など pause() が効かない環境もあるため、その場合は「停止」を使ってもらう
+    if (!supported || !speechSynthesis.speaking) return;
+    pausedRef.current = true;
+    setPaused(true);
+    speechSynthesis.pause();
+  }, [supported]);
+
+  const resume = useCallback(() => {
+    if (!supported) return;
+    pausedRef.current = false;
+    setPaused(false);
+    resumeAudioKeepAlive();
+    speechSynthesis.resume();
   }, [supported]);
 
   const play = useCallback(
@@ -102,6 +130,8 @@ export function useTTS(): UseTTS {
 
       cancelSpeech();
       cancelledRef.current = false;
+      pausedRef.current = false;
+      setPaused(false);
       setSpeaking(true);
 
       // 再生ボタン（ユーザー操作）から呼ばれるので、ここで音声リンクを起こしてよい
@@ -128,6 +158,8 @@ export function useTTS(): UseTTS {
       });
 
       for (const line of lines) {
+        // 一時停止中は次の発話に進まない（発話中の一時停止は speechSynthesis.pause() が担う）
+        while (pausedRef.current && alive()) await delay(120);
         if (!alive()) break;
         await new Promise<void>((resolve) => {
           const utter = new SpeechSynthesisUtterance(line.text);
@@ -146,10 +178,14 @@ export function useTTS(): UseTTS {
         });
       }
 
-      if (token === playTokenRef.current) setSpeaking(false);
+      if (token === playTokenRef.current) {
+        setSpeaking(false);
+        setPaused(false);
+        pausedRef.current = false;
+      }
     },
     [supported],
   );
 
-  return { supported, speaking, play, stop };
+  return { supported, speaking, paused, play, pause, resume, stop };
 }

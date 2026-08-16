@@ -82,6 +82,10 @@ export default function Drill({ part, onExit, onFinish }: DrillProps) {
         group={current.group}
         item={current.item}
         isFirstInGroup={current.isFirstInGroup}
+        indexInGroup={current.indexInGroup}
+        groupNumber={current.groupNumber}
+        groupCount={current.groupCount}
+        itemsInGroup={current.itemsInGroup}
         tts={tts}
         onAnswered={handleAnswered}
       />

@@ -1,18 +1,40 @@
 import { useEffect, useState } from 'react';
-import type { AudioLine, QuestionGroup, QuestionItem } from '../types';
+import type { AudioLine, Part, QuestionGroup, QuestionItem } from '../types';
 import type { UseTTS } from '../hooks/useTTS';
 
 const LETTERS = ['A', 'B', 'C', 'D'];
+
+/** 1つの音声・文書に複数の設問がぶら下がるパートで、そのまとまりをどう呼ぶか */
+const SET_LABEL: Partial<Record<Part, string>> = {
+  3: '会話',
+  4: 'トーク',
+  6: '文書',
+  7: '文書',
+};
 
 interface QuestionCardProps {
   group: QuestionGroup;
   item: QuestionItem;
   isFirstInGroup: boolean;
+  indexInGroup: number;
+  groupNumber: number;
+  groupCount: number;
+  itemsInGroup: number;
   tts: UseTTS;
   onAnswered: (selectedIndex: number, correct: boolean) => void;
 }
 
-export default function QuestionCard({ group, item, isFirstInGroup, tts, onAnswered }: QuestionCardProps) {
+export default function QuestionCard({
+  group,
+  item,
+  isFirstInGroup,
+  indexInGroup,
+  groupNumber,
+  groupCount,
+  itemsInGroup,
+  tts,
+  onAnswered,
+}: QuestionCardProps) {
   const [selected, setSelected] = useState<number | null>(null);
   const [answered, setAnswered] = useState(false);
 
@@ -24,6 +46,9 @@ export default function QuestionCard({ group, item, isFirstInGroup, tts, onAnswe
 
   const hideOptionText = !!group.spokenOptions && !answered;
   const hidePromptText = !!group.spokenPrompt && !answered;
+  const setLabel = SET_LABEL[group.part];
+  // 設問が1問だけのパート(1・2・5)ではセット表示は不要
+  const showSetHeader = !!setLabel && itemsInGroup > 1;
 
   function choose(i: number) {
     if (answered) return;
@@ -43,8 +68,43 @@ export default function QuestionCard({ group, item, isFirstInGroup, tts, onAnswe
     if (group.audioScript) tts.play(group.audioScript);
   }
 
+  /** 再生中は一時停止／停止を出す。再生していないときだけ再生ボタンを出す。 */
+  function audioButton(onPlay: () => void, label: string, icon: string) {
+    if (tts.speaking) {
+      return (
+        <div className="audio-controls">
+          <button className="audio-btn" onClick={tts.paused ? tts.resume : tts.pause}>
+            <span className="icon">{tts.paused ? '▶️' : '⏸'}</span>
+            {tts.paused ? '再開' : '一時停止'}
+          </button>
+          <button className="audio-btn" onClick={tts.stop}>
+            <span className="icon">⏹</span>
+            停止
+          </button>
+        </div>
+      );
+    }
+    return (
+      <button className="audio-btn" onClick={onPlay}>
+        <span className="icon">{icon}</span>
+        {label}
+      </button>
+    );
+  }
+
   return (
     <div className="card">
+      {showSetHeader && (
+        <div className="set-header">
+          <span className="set-badge">
+            {setLabel} {groupNumber} / {groupCount}
+          </span>
+          <span className="set-count">
+            設問 {indexInGroup + 1} / {itemsInGroup}
+          </span>
+        </div>
+      )}
+
       {group.photo && (
         <div className="illustration" style={{ marginBottom: 16 }}>
           <img src={group.photo.src} alt="" loading="eager" />
@@ -65,25 +125,17 @@ export default function QuestionCard({ group, item, isFirstInGroup, tts, onAnswe
           </div>
         ))}
 
-      {group.audioScript && isFirstInGroup && (
-        <button className="audio-btn" onClick={playScript} disabled={tts.speaking}>
-          <span className="icon">{tts.speaking ? '⏸' : '🎧'}</span>
-          {tts.speaking ? '再生中…' : '会話・トークを聞く'}
-        </button>
-      )}
-      {group.audioScript && !isFirstInGroup && (
-        <button className="audio-btn" onClick={playScript} disabled={tts.speaking}>
-          <span className="icon">🔁</span>
-          {tts.speaking ? '再生中…' : 'もう一度聞く'}
-        </button>
-      )}
+      {group.audioScript &&
+        audioButton(
+          playScript,
+          isFirstInGroup
+            ? `${setLabel ?? '音声'}を聞く`
+            : `${setLabel ?? '音声'} ${groupNumber} をもう一度聞く`,
+          isFirstInGroup ? '🎧' : '🔁',
+        )}
 
-      {(group.spokenPrompt || group.spokenOptions) && (
-        <button className="audio-btn" onClick={playNarration} disabled={tts.speaking}>
-          <span className="icon">{tts.speaking ? '⏸' : '🎧'}</span>
-          {tts.speaking ? '再生中…' : group.part === 1 ? '4つの説明文を聞く' : '質問と応答を聞く'}
-        </button>
-      )}
+      {(group.spokenPrompt || group.spokenOptions) &&
+        audioButton(playNarration, group.part === 1 ? '4つの説明文を聞く' : '質問と応答を聞く', '🎧')}
 
       {!hidePromptText && item.prompt && <p className="prompt">{item.prompt}</p>}
       {hidePromptText && <p className="prompt" style={{ color: 'var(--text-dim)' }}>音声をよく聞いて、応答を選んでください。</p>}
