@@ -1,7 +1,8 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { AttemptRecord, Part } from '../types';
 import { PART_META } from '../constants';
 import { buildSession } from '../utils/session';
+import { startAudioKeepAlive, stopAudioKeepAlive } from '../utils/audio';
 import { useTTS } from '../hooks/useTTS';
 import QuestionCard from './QuestionCard';
 import Timer from './Timer';
@@ -19,6 +20,16 @@ export default function Drill({ part, onExit, onFinish }: DrillProps) {
   const tts = useTTS();
 
   const meta = PART_META[part];
+
+  // Bluetooth出力の省電力による「出だしの音欠け」を防ぐため、リスニング中は
+  // 聞こえない音を流し続けて音声リンクを開いたままにする。
+  // ドリルはボタン操作で入るので、自動再生ポリシー上ここで開始してよい。
+  useEffect(() => {
+    if (meta.section !== 'listening') return;
+    startAudioKeepAlive();
+    return () => stopAudioKeepAlive();
+  }, [meta.section]);
+
   const current = session[index];
   const answeredCurrent = results.some((r) => r.itemId === current?.item.id);
   const isLast = index === session.length - 1;
