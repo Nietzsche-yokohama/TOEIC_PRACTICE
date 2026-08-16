@@ -67,7 +67,6 @@ export default function Drill({ part, onExit, onFinish }: DrillProps) {
         <button className="btn btn-secondary" onClick={() => { tts.stop(); onExit(); }}>
           ← 中断
         </button>
-        <Timer targetSeconds={meta.targetSeconds} resetKey={current.item.id} />
       </div>
       <div>
         <div className="drill-progress" style={{ marginBottom: 6 }}>
@@ -86,6 +85,7 @@ export default function Drill({ part, onExit, onFinish }: DrillProps) {
         groupNumber={current.groupNumber}
         groupCount={current.groupCount}
         itemsInGroup={current.itemsInGroup}
+        timer={<Timer targetSeconds={meta.targetSeconds} resetKey={current.item.id} />}
         tts={tts}
         onAnswered={handleAnswered}
       />

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import type { AudioLine, Part, QuestionGroup, QuestionItem } from '../types';
 import type { UseTTS } from '../hooks/useTTS';
 
@@ -20,6 +20,11 @@ interface QuestionCardProps {
   groupNumber: number;
   groupCount: number;
   itemsInGroup: number;
+  /**
+   * 経過時間の表示。長い文書を下までスクロールすると画面上部のヘッダーは
+   * 見えなくなるので、選択肢のすぐ上に置いて解答時に必ず目に入るようにする。
+   */
+  timer?: ReactNode;
   tts: UseTTS;
   onAnswered: (selectedIndex: number, correct: boolean) => void;
 }
@@ -32,6 +37,7 @@ export default function QuestionCard({
   groupNumber,
   groupCount,
   itemsInGroup,
+  timer,
   tts,
   onAnswered,
 }: QuestionCardProps) {
@@ -139,6 +145,8 @@ export default function QuestionCard({
 
       {!hidePromptText && item.prompt && <p className="prompt">{item.prompt}</p>}
       {hidePromptText && <p className="prompt" style={{ color: 'var(--text-dim)' }}>音声をよく聞いて、応答を選んでください。</p>}
+
+      {timer && <div className="question-timer">{timer}</div>}
 
       <div className="options">
         {item.options.map((opt, i) => {
